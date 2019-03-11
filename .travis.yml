@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jhcervantes/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run jhcervantes/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t jhcervantes/multi-client ./client
+  - docker build -t jhcervantes/multi-nginx ./nginx
+  - docker build -t jhcervantes/multi-server ./server
+  - docker build -t jhcervantes/multi-worker ./worker
+  # Login to docker hub
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push to docker hub
+  - docker push jhcervantes/multi-client
+  - docker push jhcervantes/multi-nginx
+  - docker push jhcervantes/multi-server
+  - docker push jhcervantes/multi-worker
